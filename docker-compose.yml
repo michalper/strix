@@ -1,0 +1,88 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: strix
+      POSTGRES_USER: strix
+      POSTGRES_PASSWORD: strix
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U strix -d strix"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    environment:
+      # Default "guest" user can only connect from localhost inside its own
+      # container - any other container on this network needs a real user.
+      RABBITMQ_DEFAULT_USER: strix
+      RABBITMQ_DEFAULT_PASS: strix
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "15672:15672"
+
+  migrations:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      target: prod
+    command: ["php", "bin/console", "doctrine:migrations:migrate", "--no-interaction"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      target: prod
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      target: prod
+    # Deliberately NOT consuming "failed" here: that transport is the DLQ, meant for
+    # manual inspection/retry (messenger:failed:show / messenger:failed:retry), not
+    # for the worker to pick back up automatically - doing so would turn every
+    # dead-lettered message into an infinite retry loop.
+    command: ["php", "bin/console", "messenger:consume", "async", "-vv", "--time-limit=3600", "--memory-limit=256M"]
+    restart: unless-stopped
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ./public:/app/public:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "8080:80"
+    depends_on:
+      - app
+
+  notification-mock:
+    build:
+      context: ./mock/notification-service
+    volumes:
+      - mockdata:/data
+
+volumes:
+  pgdata:
+  mockdata:
