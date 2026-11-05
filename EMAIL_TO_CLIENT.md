@@ -33,7 +33,7 @@ Przyjmuję powyższe jako fundament pracy. Jeśli z jakiegoś powodu nie są Pan
 - mechanizm wysyłki powiadomień do jednego kanału, z automatycznym ponawianiem i zabezpieczeniem przed utratą zgłoszeń,
 - całość uruchamianą jedną komendą, z instrukcją obsługi.
 
-Proszę o potwierdzenie, że powyższe warunki są dla Pana akceptowalne, oraz o informację, co jest dla Pana ważniejsze z punktów do ustalenia. Zaczynam pracę od razu po potwierdzeniu.
+Proszę o potwierdzenie, że powyższe warunki są dla Pana zrozumiałe i akceptowalne, oraz o informację, co jest dla Pana ważniejsze z punktów do ustalenia. Zaczynam pracę od razu po potwierdzeniu.
 
 Z poważaniem,
 [Imię i nazwisko]
@@ -50,7 +50,7 @@ I'm taking over the project that receives payment notifications and forwards the
 
 **Conditions I need in place before I start:**
 
-This system handles customers' money, so I'm treating the following as requirements rather than discussion points:
+This system registers customers' payments, so I'm treating the following as a technical condition for delivering the project:
 
 - **No payment notification can ever go missing.** If our notification service is briefly unavailable (overloaded, or down for maintenance), the notification won't be lost — the system will keep retrying, waiting a bit longer each time, and if it still doesn't get through, it gets placed somewhere safe so it can be handled by hand later.
 - **The same payment can never be recorded twice.** If the payment provider sends the same notification more than once (which does happen, e.g. during brief connectivity issues), the system needs to recognize that and only record it once.
