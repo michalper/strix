@@ -24,3 +24,9 @@ services:
     App\Security\WebhookSignatureVerifier:
         arguments:
             $secret: '%env(WEBHOOK_HMAC_SECRET)%'
+
+    App\Notification\NotificationChannelInterface: '@App\Notification\MockHttpNotificationChannel'
+
+    App\Notification\MockHttpNotificationChannel:
+        arguments:
+            $notificationUrl: '%env(NOTIFICATION_MOCK_URL)%'

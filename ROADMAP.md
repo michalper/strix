@@ -10,7 +10,7 @@ Implementation checklist for the Payment Webhook Ingestion & Notification Pipeli
 - [x] 6. `Entity/WebhookEvent` + `Repository/WebhookEventRepository` → migration (hand-edit `json`→`jsonb` via custom `JsonbType`) → migrated against dev Postgres, `doctrine:schema:validate` clean
 - [x] 7. `Security/WebhookSignatureVerifier` (HMAC-SHA256, `hash_equals`)
 - [x] 8. `Controller/Api/PaymentWebhookController` + `EventListener/ApiExceptionListener`
-- [ ] 9. `Message/SendPaymentNotification`, `Notification/{NotificationChannelInterface,NotificationPayload,MockHttpNotificationChannel}`, `MessageHandler/SendPaymentNotificationHandler`, `EventListener/MessengerFailureListener`
+- [x] 9. `Message/SendPaymentNotification`, `Notification/{NotificationChannelInterface,NotificationPayload,MockHttpNotificationChannel}`, `MessageHandler/SendPaymentNotificationHandler`, `EventListener/MessengerFailureListener`
 - [ ] 10. `config/packages/messenger.yaml`, `config/packages/monolog.yaml`
 - [ ] 11. `mock/notification-service/` (plain-PHP mock + Dockerfile)
 - [ ] 12. `docker/php/Dockerfile`, `docker/nginx/default.conf`, `docker-compose.yml`, `docker-compose.override.e2e.yml`
