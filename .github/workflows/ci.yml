@@ -12,9 +12,10 @@ on:
 # `docker run -v "$PWD":/app`, bind-mounting the checked-out repo instead of baking it
 # into the image. This is the same image used for local dev/CI tooling throughout the
 # project (see AGENTS.md) - it keeps CI on the exact same containerized PHP 8.5
-# environment as everywhere else, rather than a bare GH-runner PHP install. The `gha`
-# Buildx cache is shared (same scope) across jobs/runs so the image layer cache is warm
-# after the first build instead of rebuilding ext-amqp etc. from scratch every time.
+# environment as everywhere else, rather than a bare GH-runner PHP install. No Buildx
+# GHA layer cache here on purpose: it intermittently 504'd on this Dockerfile's `ADD
+# <url>` step (fetching install-php-extensions), failing builds outright - a slower,
+# uncached build beats a flaky fast one.
 jobs:
   static-analysis:
     name: Static analysis (PHPStan, php-cs-fixer, Rector)
@@ -32,8 +33,6 @@ jobs:
           target: dev
           tags: strix-php-dev:dev
           load: true
-          cache-from: type=gha,scope=php-dev
-          cache-to: type=gha,scope=php-dev,mode=max
 
       # The dev image has no COPY/composer-install baked in (it's meant to run against
       # whatever's bind-mounted) and vendor/ is gitignored, so a fresh checkout has no
@@ -73,8 +72,6 @@ jobs:
           target: dev
           tags: strix-php-dev:dev
           load: true
-          cache-from: type=gha,scope=php-dev
-          cache-to: type=gha,scope=php-dev,mode=max
 
       - name: Install composer dependencies
         run: docker run --rm -v "$PWD":/app -w /app strix-php-dev:dev composer install --no-interaction
@@ -126,8 +123,6 @@ jobs:
           target: dev
           tags: strix-php-dev:dev
           load: true
-          cache-from: type=gha,scope=php-dev
-          cache-to: type=gha,scope=php-dev,mode=max
 
       - name: Install composer dependencies
         run: docker run --rm -v "$PWD":/app -w /app strix-php-dev:dev composer install --no-interaction
@@ -248,8 +243,6 @@ jobs:
           target: dev
           tags: strix-php-dev:dev
           load: true
-          cache-from: type=gha,scope=php-dev
-          cache-to: type=gha,scope=php-dev,mode=max
 
       - name: Install composer dependencies
         run: docker run --rm -v "$PWD":/app -w /app strix-php-dev:dev composer install --no-interaction
