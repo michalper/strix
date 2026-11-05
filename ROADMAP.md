@@ -18,7 +18,7 @@ Implementation checklist for the Payment Webhook Ingestion & Notification Pipeli
 - [x] 14. `composer require --dev rector/rector`, `rector.php` (dead-code + PHP 8.5/Symfony-upgrade rulesets) — dry-run clean
 - [x] 15. Tighten `.php-cs-fixer.dist.php` beyond the bare `@Symfony` default — add `@Symfony:risky` (declare_strict_types, strict comparisons), `@PhpCsFixer`-level import/class-element ordering, PHPUnit-specific rules for `tests/` — `--dry-run --diff` clean
 - [x] 16. Unit tests (`tests/Unit/`) — green
-- [ ] 17. Functional tests (`tests/Functional/`), test DB + migration — green
+- [x] 17. Functional tests (`tests/Functional/`), test DB + migration — green
 - [ ] 18. Functional test: out-of-order delivery guard — `charge.successful` processed correctly per-`event_id` even when no prior payment-intent record exists yet
 - [ ] 19. `docker compose up --build` + manual smoke test (idempotency curl ×2, `FAIL`/`RETRY_ONCE`/`TIMEOUT` markers, RabbitMQ UI, direct SQL checks)
 - [ ] 20. E2E tests (`tests/E2E/`) against the live stack

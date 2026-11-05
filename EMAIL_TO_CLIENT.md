@@ -1,6 +1,6 @@
 # Email do klienta
 
-> Szkic — do przeglądu przed wysyłką. Treść merytoryczna (zakres, decyzje architektoniczne) jest zgodna z `AGENTS.md`. Wersja PL (formalna, "Pan") i EN poniżej.
+> Szkic — do przeglądu przed wysyłką. Treść merytoryczna (zakres, decyzje architektoniczne) jest zgodna z `AGENTS.md`. Język celowo nietechniczny — klient nie jest osobą techniczną. Wersja PL (formalna, "Pan") i EN poniżej.
 
 ---
 
@@ -10,29 +10,30 @@
 
 Szanowny Panie,
 
-Przejmuję prowadzenie projektu integracji webhooków płatności. Zanim zacznę pracę nad kodem, chciałbym przedstawić Panu warunki techniczne, na jakich mogę odpowiedzialnie zbudować tę pierwszą wersję, oraz zaproponować podział pozostałego zakresu na etapy.
+Przejmuję prowadzenie projektu odbierania zgłoszeń o płatnościach. Zanim zacznę pracę, chciałbym przedstawić Panu kilka warunków, bez których nie mogę wziąć za ten system odpowiedzialności, oraz zaproponować, co zrobimy od razu, a co odłożymy na później.
 
-**Warunki techniczne pierwszej wersji — niepodlegające negocjacji:**
+**Warunki niezbędne do rozpoczęcia pracy:**
 
-System przetwarza dane płatności, więc poniższe elementy traktuję jako warunek, a nie opcję do rozważenia:
+Ten system obsługuje pieniądze klientów, więc poniższe punkty traktuję jako konieczność, a nie temat do dyskusji:
 
-- **Kolejka / message broker.** To realna ochrona przed utratą zdarzeń przy chwilowej niedostępności serwisu powiadomień (automatyczne ponawianie z rosnącym odstępem czasu, plus bezpieczne miejsce na zdarzenia, którym się to nie udało). Bez tego nie mogę zagwarantować, że żadne powiadomienie o płatności nie zginie po drodze.
-- **Idempotentność i podpisany endpoint.** Ten sam `event_id` trafiający w tym samym momencie nie może utworzyć dwóch rekordów, a każde żądanie musi być zweryfikowane podpisem. Przy danych płatności to minimum, nie rozszerzenie.
-- **Czysta obsługa błędnych danych.** Niekompletny lub uszkodzony payload nie może wywrócić serwisu — ma skończyć się czytelnym logiem i jasną odpowiedzią błędu, zawsze.
+- **Żadne zgłoszenie o płatności nie może się zgubić.** Jeśli nasz system powiadomień będzie przez chwilę niedostępny (np. przeciążony lub w trakcie awarii), zgłoszenie nie przepadnie — system będzie próbował je dostarczyć ponownie, z coraz dłuższą przerwą między próbami, a jeśli to się mimo wszystko nie uda, zgłoszenie trafi do bezpiecznego miejsca, skąd można je później ręcznie obsłużyć.
+- **Jedna płatność nie może zostać zarejestrowana dwa razy.** Jeśli dostawca płatności wyśle to samo zgłoszenie dwukrotnie (co się zdarza, np. przy chwilowych problemach z łącznością), system musi to rozpoznać i zapisać tylko jeden raz.
+- **System musi sam rozpoznawać, że zgłoszenie rzeczywiście pochodzi od dostawcy płatności, a nie od kogoś, kto się pod niego podszywa.** To podstawowa ochrona przed fałszywymi zgłoszeniami.
+- **Niekompletne lub uszkodzone dane nie mogą wywrócić systemu.** Jeśli coś przyjdzie w nieprawidłowej formie, system to odnotuje w zrozumiały sposób i da znać, że coś jest nie tak — ale nie przestanie działać.
 
-Przyjmuję to jako podstawę pracy; jeśli z jakiegoś powodu nie są Państwu potrzebne (np. środowisko testowe o innej charakterystyce), proszę o sygnał przed startem — w przeciwnym razie zakładam, że powyższe wchodzi do pierwszej wersji.
+Przyjmuję powyższe jako fundament pracy. Jeśli z jakiegoś powodu nie są Panu potrzebne w tej formie, proszę o informację przed rozpoczęciem prac — w przeciwnym razie zakładam, że wchodzą do pierwszej wersji.
 
-**Zakres do wspólnego ustalenia:**
+**Co proponuję odłożyć na później, do wspólnego ustalenia:**
 
-1. **Powiadomienia na wielu kanałach.** Proponuję zacząć od jednego kanału (na razie zasymulowanego), zaprojektowanego tak, by dodanie kolejnych (np. Slack, SMS, drugi e-mail) nie wymagało przebudowy systemu. Każdy kolejny kanał to jednak odrębna integracja i własne testy — chciałbym je traktować jako osobne, policzalne zadania, a nie "włącznik" w już działającym systemie.
-2. **Raporty z wykorzystaniem AI.** Proponuję wyłączyć je z tej iteracji — to odrębny temat produktowy (jakie dane, w jakiej formie, dla kogo, jak często), który zasługuje na osobną rozmowę o wymaganiach, zanim zaczniemy go kodować.
+1. **Powiadomienia na wielu kanałach (np. SMS, Slack, druga skrzynka e-mail).** W pierwszym etapie zrobimy jeden kanał powiadomień, ale tak, żeby dodanie kolejnych w przyszłości nie wymagało przebudowy całego systemu od zera. Każdy kolejny kanał to jednak dodatkowa praca i testy, więc proponuję traktować je jako osobne, wycenione zadania, a nie coś, co "po prostu się włącza".
+2. **Raporty generowane przez AI.** Proponuję wyłączyć je z tej iteracji — to osobny temat (jakie dane mają się w nich znaleźć, w jakiej formie, dla kogo, jak często), który zasługuje na odrębną rozmowę, zanim zaczniemy to budować. Wolałbym nie zgadywać, czego Panu potrzeba, i nie robić czegoś, co trzeba będzie później przerabiać.
 
 **Co otrzyma Pan po pierwszym etapie:**
-- endpoint przyjmujący webhooki, odporny na duplikaty i nieprawidłowe dane,
-- asynchroniczny mechanizm wysyłki powiadomień do jednego kanału, z ponownymi próbami i zabezpieczeniem przed utratą zdarzeń,
+- punkt przyjmujący zgłoszenia o płatnościach, odporny na duplikaty i błędne dane,
+- mechanizm wysyłki powiadomień do jednego kanału, z automatycznym ponawianiem i zabezpieczeniem przed utratą zgłoszeń,
 - całość uruchamianą jedną komendą, z instrukcją obsługi.
 
-Proszę o potwierdzenie, że powyższe warunki techniczne są dla Pana zrozumiałe i akceptowalne, oraz o informację, jak chciałby Pan rozłożyć priorytety w punktach do ustalenia — zaczynam pracę od razu po potwierdzeniu.
+Proszę o potwierdzenie, że powyższe warunki są dla Pana zrozumiałe i akceptowalne, oraz o informację, co jest dla Pana ważniejsze z punktów do ustalenia — zaczynam pracę od razu po potwierdzeniu.
 
 Z poważaniem,
 [Imię i nazwisko]
@@ -45,29 +46,30 @@ Z poważaniem,
 
 Hello,
 
-I'm taking over the payment webhook integration project. Before I start writing code, I'd like to set out the technical conditions under which I can responsibly build this first version, and propose how to split the remaining scope into phases.
+I'm taking over the project that receives payment notifications and forwards them to the sales team. Before I start, I'd like to set out a few conditions I need in place to responsibly take ownership of this system, and propose what we build now versus what we leave for later.
 
-**Technical conditions for phase one — not up for negotiation:**
+**Conditions I need in place before I start:**
 
-This system processes payment data, so I'm treating the following as a requirement rather than a discussion point:
+This system handles customers' money, so I'm treating the following as requirements rather than discussion points:
 
-- **A message queue.** This is real protection against losing events if the notification service is briefly unavailable (automatic retries with increasing delay, plus a safe place for anything that still fails). Without it, I can't guarantee that a payment notification won't simply disappear.
-- **Idempotency and a signed endpoint.** The same `event_id` arriving at the same instant must not create two records, and every request must be signature-verified. For payment data, this is the baseline, not an add-on.
-- **Clean handling of bad input.** A malformed or incomplete payload must never take the service down — it has to end in a readable log entry and a clear error response, every time.
+- **No payment notification can ever go missing.** If our notification service is briefly unavailable (overloaded, or down for maintenance), the notification won't be lost — the system will keep retrying, waiting a bit longer each time, and if it still doesn't get through, it gets placed somewhere safe so it can be handled by hand later.
+- **The same payment can never be recorded twice.** If the payment provider sends the same notification more than once (which does happen, e.g. during brief connectivity issues), the system needs to recognize that and only record it once.
+- **The system must be able to tell that a notification genuinely came from the payment provider, not from someone pretending to be them.** That's basic protection against fake notifications.
+- **Incomplete or corrupted data must never bring the system down.** If something arrives in the wrong shape, the system logs it clearly and flags that something's wrong, but keeps running.
 
-I'm treating this as the foundation of the work. If for some reason these aren't needed in your context (e.g. a test environment with different constraints), please flag it before I start — otherwise I'll assume all of the above is part of phase one.
+I'm treating the above as the foundation of the work. If for some reason you don't need these in this form, please let me know before I start — otherwise I'll assume they're part of the first version.
 
-**Scope to align on together:**
+**What I'd suggest leaving for later, to agree on together:**
 
-1. **Notifications across multiple channels.** I'd suggest starting with one channel (mocked for now), built behind an interface so adding more later (Slack, SMS, a second email channel) doesn't require rebuilding the system. Each additional channel is still its own integration and its own tests, though — I'd like to treat those as separate, scoped work rather than a "flip a switch" feature on top of what's already running.
-2. **AI-generated reports.** I'd suggest leaving these out of this iteration — that's a separate product question (what data, what format, for whom, how often) that deserves its own requirements conversation before any code gets written.
+1. **Notifications across multiple channels (e.g. SMS, Slack, a second email inbox).** For phase one, we'll build one notification channel, but in a way that adding more later doesn't mean rebuilding the whole system from scratch. Each additional channel is still extra work and extra testing, though, so I'd suggest treating each one as its own task to scope and estimate, rather than something that "just gets switched on."
+2. **AI-generated reports.** I'd suggest leaving these out of this round — that's a separate topic (what should be in them, in what format, for whom, how often) that deserves its own conversation before we start building it. I'd rather not guess at what you need and end up building something that has to be redone.
 
 **What you'll have after phase one:**
-- An endpoint that accepts webhooks and is resilient to duplicates and bad input,
-- An asynchronous worker that delivers notifications to one channel, with retries and a safety net for failures,
+- A point that accepts payment notifications and is resilient to duplicates and bad data,
+- A mechanism that delivers notifications to one channel, with automatic retries and protection against lost notifications,
 - Everything runnable with a single command, with setup instructions included.
 
-Could you confirm that the technical conditions above are clear and acceptable, and let me know how you'd like to prioritize the points still open for discussion? I'll get started as soon as I have your confirmation.
+Could you confirm the conditions above are clear and acceptable, and let me know which of the open points matters more to you? I'll get started as soon as I have your confirmation.
 
 Best regards,
 [Your name]
