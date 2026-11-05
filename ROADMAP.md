@@ -4,10 +4,10 @@ Implementation checklist for the Payment Webhook Ingestion & Notification Pipeli
 
 - [x] 1. `git init`, `.gitignore`, initial commit (`SPEC.md`, `AGENTS.md`, `CLAUDE.md`)
 - [x] 2. Symfony 7.4.* skeleton (PHP 8.5) scaffolded and merged into the repo, `composer install` verified clean
-- [ ] 3. `composer require` runtime packages (Doctrine ORM/migrations, Messenger + AMQP transport, HTTP client, Monolog) and dev packages (MakerBundle, PHPUnit bridge, PHPStan + extensions, php-cs-fixer, Infection)
-- [ ] 4. `.env` / `.env.test` — `DATABASE_URL`, `MESSENGER_TRANSPORT_DSN`, `WEBHOOK_HMAC_SECRET`, `NOTIFICATION_MOCK_URL`, `MESSENGER_RETRY_*`
-- [ ] 5. `Enum/WebhookProcessingStatus`, `ValueObject/Money`, `Exception/InvalidWebhookPayloadException`, `Dto/PaymentWebhookPayload`
-- [ ] 6. `Entity/WebhookEvent` + `Repository/WebhookEventRepository` → migration (hand-edit `json`→`jsonb`) → migrate
+- [x] 3. `composer require` runtime packages (Doctrine ORM/migrations, Messenger + AMQP transport, HTTP client, Monolog) and dev packages (MakerBundle, PHPUnit bridge, PHPStan + extensions, php-cs-fixer, Infection)
+- [x] 4. `.env` / `.env.test` — `DATABASE_URL`, `MESSENGER_TRANSPORT_DSN`, `WEBHOOK_HMAC_SECRET`, `NOTIFICATION_MOCK_URL`, `MESSENGER_RETRY_*`
+- [x] 5. `Enum/WebhookProcessingStatus`, `ValueObject/Money`, `Exception/InvalidWebhookPayloadException`, `Dto/PaymentWebhookPayload`
+- [x] 6. `Entity/WebhookEvent` + `Repository/WebhookEventRepository` → migration (hand-edit `json`→`jsonb` via custom `JsonbType`) → migrated against dev Postgres, `doctrine:schema:validate` clean
 - [ ] 7. `Security/WebhookSignatureVerifier` (HMAC-SHA256, `hash_equals`)
 - [ ] 8. `Controller/Api/PaymentWebhookController` + `EventListener/ApiExceptionListener`
 - [ ] 9. `Message/SendPaymentNotification`, `Notification/{NotificationChannelInterface,NotificationPayload,MockHttpNotificationChannel}`, `MessageHandler/SendPaymentNotificationHandler`, `EventListener/MessengerFailureListener`
