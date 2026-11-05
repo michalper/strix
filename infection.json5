@@ -1,0 +1,17 @@
+{
+    "$schema": "vendor/infection/infection/resources/schema.json",
+    "source": {
+        "directories": ["src"]
+    },
+    "mutators": {
+        "@default": true
+    },
+    // Scoped to the unit suite deliberately: it's the only layer that needs no live
+    // Postgres/RabbitMQ/stack, so Infection can run standalone (just `vendor/bin/infection`)
+    // instead of requiring docker-compose up first. Functional/e2e already cover the
+    // integration paths; this is a stretch-goal signal on the unit-tested logic only.
+    "testFramework": "phpunit",
+    "testFrameworkOptions": "--testsuite=unit",
+    "minMsi": 60,
+    "minCoveredMsi": 60
+}
