@@ -12,7 +12,6 @@ declare(strict_types=1);
  *                         retry/backoff/DLQ paths without real network flakiness.
  * GET  /__requests        lets tests inspect what the worker actually sent.
  */
-
 $dataDir = '/data';
 $logFile = $dataDir.'/requests.ndjson';
 

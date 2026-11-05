@@ -38,7 +38,6 @@ final readonly class PaymentWebhookPayload
     public static function fromRawJson(string $rawJson): self
     {
         try {
-            /** @var mixed $decoded */
             $decoded = json_decode($rawJson, true, 512, JSON_THROW_ON_ERROR);
         } catch (\JsonException $e) {
             throw InvalidWebhookPayloadException::malformedJson('Request body is not valid JSON: '.$e->getMessage());
@@ -186,7 +185,7 @@ final readonly class PaymentWebhookPayload
             return [];
         }
 
-        /** @var array<string, mixed> $value */
+        /* @var array<string, mixed> $value */
         return $value;
     }
 

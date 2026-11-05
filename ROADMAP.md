@@ -14,7 +14,7 @@ Implementation checklist for the Payment Webhook Ingestion & Notification Pipeli
 - [x] 10. `config/packages/messenger.yaml`, `config/packages/monolog.yaml`
 - [x] 11. `mock/notification-service/` (plain-PHP mock + Dockerfile)
 - [x] 12. `docker/php/Dockerfile`, `docker/nginx/default.conf`, `docker-compose.yml`, `docker-compose.override.e2e.yml`
-- [ ] 13. `phpstan.neon`, `tests/object-manager.php`, `.php-cs-fixer.dist.php` — green at level 8
+- [x] 13. `phpstan.neon`, `tests/object-manager.php`, `.php-cs-fixer.dist.php` — green at level 8
 - [ ] 14. Unit tests (`tests/Unit/`) — green
 - [ ] 15. Functional tests (`tests/Functional/`), test DB + migration — green
 - [ ] 16. Functional test: out-of-order delivery guard — `charge.successful` processed correctly per-`event_id` even when no prior payment-intent record exists yet
@@ -23,7 +23,7 @@ Implementation checklist for the Payment Webhook Ingestion & Notification Pipeli
 - [ ] 19. `.github/workflows/ci.yml` (5 jobs: static-analysis, unit-tests, functional-tests, e2e-tests in parallel + `build` gate; `mutation-testing` on `workflow_dispatch`)
 - [ ] 20. `infection.json5` (stretch goal, non-blocking)
 - [ ] 21. Code audit pass against the checklist in the plan — actually fix what's found
-- [ ] 22. `README.md`, `ARCHITECTURE.md` (`EMAIL_TO_CLIENT.md` drafted, final pass by the user before submission)
+- [ ] 22. `README.md` (`ARCHITECTURE.md` and `EMAIL_TO_CLIENT.md` drafted already, final pass by the user before submission)
 - [ ] 23. Commit, push `main` to the existing `https://github.com/michalper/strix.git` remote
 
 Full detail per step: `/Users/michalper/.claude/plans/przygotowany-plik-spec-md-cozy-pond.md`.
