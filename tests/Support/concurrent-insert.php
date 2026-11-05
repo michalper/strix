@@ -19,9 +19,27 @@ if (null === $eventId) {
     exit(2);
 }
 
-$pdo = new PDO('pgsql:host=postgres;port=5432;dbname=strix_test', 'strix', 'strix');
+// Derived from DATABASE_URL (inherited from the parent PHPUnit process) rather than a
+// hardcoded host, so this works whether Postgres is reachable as "postgres" (local
+// dev/e2e, same docker network) or "127.0.0.1" (CI, a GitHub Actions service
+// container). The "_test" suffix mirrors config/packages/doctrine.yaml's
+// `dbname_suffix` under when@test, which this standalone script otherwise bypasses.
+$databaseUrl = $_SERVER['DATABASE_URL'] ?? getenv('DATABASE_URL');
+if (!is_string($databaseUrl) || '' === $databaseUrl) {
+    fwrite(STDERR, "DATABASE_URL is not set in the environment.\n");
+
+    exit(2);
+}
+
+$parts = parse_url($databaseUrl);
+$host = $parts['host'] ?? 'postgres';
+$port = $parts['port'] ?? 5432;
+$user = $parts['user'] ?? 'strix';
+$pass = $parts['pass'] ?? 'strix';
+$dbName = trim($parts['path'] ?? '/strix', '/').'_test';
 
 try {
+    $pdo = new PDO("pgsql:host={$host};port={$port};dbname={$dbName}", $user, $pass);
     $statement = $pdo->prepare(
         'INSERT INTO webhook_events
             (event_id, event_type, livemode, occurred_at, transaction_id, amount_value,
