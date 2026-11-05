@@ -10,7 +10,7 @@
 
 Szanowny Panie,
 
-Przejmuję prowadzenie projektu odbierania zgłoszeń o płatnościach. Zanim zacznę pracę, chciałbym przedstawić Panu kilka warunków, bez których nie mogę wziąć za ten system odpowiedzialności, oraz zaproponować, co zrobimy od razu, a co odłożymy na później.
+Przejmuję prowadzenie projektu odbierania zgłoszeń o płatnościach. Zanim zacznę pracę, chciałbym przedstawić Panu kilka warunków, bez których nie mogę wziąć za ten system odpowiedzialności. Chciałbym też zaproponować, co zrobimy od razu, a co odłożymy na później.
 
 **Warunki niezbędne do rozpoczęcia pracy:**
 

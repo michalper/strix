@@ -59,6 +59,26 @@ final class PaymentWebhookControllerTest extends WebTestCase
         self::assertCount(1, $this->asyncTransport()->getSent());
     }
 
+    public function testChargeSuccessfulIsProcessedWithNoPriorPaymentIntentRecord(): void
+    {
+        // Simulates out-of-order delivery: there is deliberately no earlier
+        // "payment intent" row for this transaction_id anywhere in the table - the
+        // system has no such concept, so a charge.successful event is processed as
+        // a self-contained fact and must succeed regardless of what, if anything,
+        // came before it for the same transaction.
+        $transactionId = 'txn_ooo_'.bin2hex(random_bytes(4));
+        self::assertSame(0, $this->countRowsForTransactionId($transactionId));
+
+        $data = $this->validPayloadArray('evt_ooo', 'ORD-OOO');
+        $data['data']['transaction']['id'] = $transactionId;
+        $body = json_encode($data, JSON_THROW_ON_ERROR);
+
+        $this->client->request('POST', self::ENDPOINT, server: $this->signedHeaders($body), content: $body);
+
+        self::assertResponseStatusCodeSame(Response::HTTP_ACCEPTED);
+        self::assertSame(1, $this->countRowsForTransactionId($transactionId));
+    }
+
     public function testDuplicateEventIdIsIdempotentUnderSequentialRequests(): void
     {
         $body = $this->validPayload('evt_func_dup', 'ORD-FUNC-DUP');
@@ -268,6 +288,11 @@ final class PaymentWebhookControllerTest extends WebTestCase
     private function countRowsForEventId(string $eventId): int
     {
         return (int) $this->connection()->fetchOne('SELECT COUNT(*) FROM webhook_events WHERE event_id = ?', [$eventId]);
+    }
+
+    private function countRowsForTransactionId(string $transactionId): int
+    {
+        return (int) $this->connection()->fetchOne('SELECT COUNT(*) FROM webhook_events WHERE transaction_id = ?', [$transactionId]);
     }
 
     private function asyncTransport(): InMemoryTransport
