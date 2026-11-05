@@ -13,13 +13,12 @@ use Symfony\Component\Messenger\Event\WorkerMessageFailedEvent;
 
 #[WithMonologChannel('webhook')]
 #[AsEventListener(event: WorkerMessageFailedEvent::class)]
-final class MessengerFailureListener
+final readonly class MessengerFailureListener
 {
     public function __construct(
-        private readonly WebhookEventRepository $repository,
-        private readonly LoggerInterface $logger,
-    ) {
-    }
+        private WebhookEventRepository $repository,
+        private LoggerInterface $logger,
+    ) {}
 
     public function __invoke(WorkerMessageFailedEvent $event): void
     {

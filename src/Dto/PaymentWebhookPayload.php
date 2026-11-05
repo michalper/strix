@@ -32,8 +32,7 @@ final readonly class PaymentWebhookPayload
         public ?string $channel,
         /** @var array<string, mixed> */
         public array $rawPayload,
-    ) {
-    }
+    ) {}
 
     public static function fromRawJson(string $rawJson): self
     {
@@ -43,7 +42,7 @@ final readonly class PaymentWebhookPayload
             throw InvalidWebhookPayloadException::malformedJson('Request body is not valid JSON: '.$e->getMessage());
         }
 
-        if (!is_array($decoded) || ([] !== $decoded && array_is_list($decoded))) {
+        if (!\is_array($decoded) || ([] !== $decoded && array_is_list($decoded))) {
             throw InvalidWebhookPayloadException::malformedJson('Request body must be a JSON object.');
         }
 
@@ -79,7 +78,7 @@ final readonly class PaymentWebhookPayload
         $paymentMethodData = $transaction['payment_method'] ?? null;
         $paymentMethodType = null;
         $paymentMethodIssuer = null;
-        if (is_array($paymentMethodData)) {
+        if (\is_array($paymentMethodData)) {
             /** @var array<string, mixed> $paymentMethodData */
             $paymentMethodType = self::optionalString($paymentMethodData, 'type');
             $paymentMethodIssuer = self::optionalString($paymentMethodData, 'issuer');
@@ -96,7 +95,7 @@ final readonly class PaymentWebhookPayload
             throw InvalidWebhookPayloadException::invalidFields(array_values(array_unique($errors)));
         }
 
-        \assert(null !== $eventType && null !== $eventId && null !== $timestamp && null !== $livemode);
+        \assert(!\in_array(null, [$eventType, $eventId, $timestamp, $livemode], true));
         \assert(null !== $transactionId && null !== $transactionStatus);
         \assert(null !== $amountValue && null !== $amountCurrency);
         \assert(null !== $customerId && null !== $customerEmail);
@@ -129,7 +128,7 @@ final readonly class PaymentWebhookPayload
     private static function requireString(array $data, string $key, array &$errors, ?string $errorField = null): ?string
     {
         $value = $data[$key] ?? null;
-        if (!is_string($value) || '' === $value) {
+        if (!\is_string($value) || '' === $value) {
             $errors[] = $errorField ?? $key;
 
             return null;
@@ -145,7 +144,7 @@ final readonly class PaymentWebhookPayload
     private static function requireInt(array $data, string $key, array &$errors, ?string $errorField = null): ?int
     {
         $value = $data[$key] ?? null;
-        if (!is_int($value)) {
+        if (!\is_int($value)) {
             $errors[] = $errorField ?? $key;
 
             return null;
@@ -161,7 +160,7 @@ final readonly class PaymentWebhookPayload
     private static function requireBool(array $data, string $key, array &$errors, ?string $errorField = null): ?bool
     {
         $value = $data[$key] ?? null;
-        if (!is_bool($value)) {
+        if (!\is_bool($value)) {
             $errors[] = $errorField ?? $key;
 
             return null;
@@ -179,13 +178,13 @@ final readonly class PaymentWebhookPayload
     private static function requireArray(array $data, string $key, array &$errors, ?string $errorField = null): array
     {
         $value = $data[$key] ?? null;
-        if (!is_array($value)) {
+        if (!\is_array($value)) {
             $errors[] = $errorField ?? $key;
 
             return [];
         }
 
-        /* @var array<string, mixed> $value */
+        // @var array<string, mixed> $value
         return $value;
     }
 
@@ -196,6 +195,6 @@ final readonly class PaymentWebhookPayload
     {
         $value = $data[$key] ?? null;
 
-        return is_string($value) && '' !== $value ? $value : null;
+        return \is_string($value) && '' !== $value ? $value : null;
     }
 }

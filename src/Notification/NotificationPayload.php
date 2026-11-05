@@ -14,6 +14,5 @@ final readonly class NotificationPayload
         public string $storeId,
         public string $customerEmail,
         public Money $amount,
-    ) {
-    }
+    ) {}
 }

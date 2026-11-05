@@ -13,6 +13,9 @@ WORKDIR /app
 FROM base AS dev
 # Dev stage keeps require-dev packages (PHPUnit, PHPStan, php-cs-fixer, Infection, MakerBundle)
 # for composer operations, tests and static analysis run against this image.
+# pcov: lightweight coverage driver (faster than Xdebug for coverage-only use) so the
+# unit-test suite's line-coverage target is actually measurable in CI and locally.
+RUN install-php-extensions pcov
 
 FROM base AS prod
 # Must be set before `composer install --no-dev`: Flex's post-install cache:clear

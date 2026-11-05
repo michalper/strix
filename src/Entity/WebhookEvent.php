@@ -12,8 +12,8 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: WebhookEventRepository::class)]
 #[ORM\Table(name: 'webhook_events')]
-#[ORM\Index(columns: ['order_id'], name: 'idx_webhook_events_order_id')]
-#[ORM\Index(columns: ['processing_status'], name: 'idx_webhook_events_processing_status')]
+#[ORM\Index(name: 'idx_webhook_events_order_id', columns: ['order_id'])]
+#[ORM\Index(name: 'idx_webhook_events_processing_status', columns: ['processing_status'])]
 class WebhookEvent
 {
     #[ORM\Id]
@@ -91,9 +91,7 @@ class WebhookEvent
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $failedAt = null;
 
-    private function __construct()
-    {
-    }
+    private function __construct() {}
 
     public static function fromPayload(PaymentWebhookPayload $payload): self
     {

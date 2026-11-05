@@ -6,13 +6,12 @@ namespace App\Notification;
 
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-final class MockHttpNotificationChannel implements NotificationChannelInterface
+final readonly class MockHttpNotificationChannel implements NotificationChannelInterface
 {
     public function __construct(
-        private readonly HttpClientInterface $httpClient,
-        private readonly string $notificationUrl,
-    ) {
-    }
+        private HttpClientInterface $httpClient,
+        private string $notificationUrl,
+    ) {}
 
     public function send(NotificationPayload $payload): void
     {

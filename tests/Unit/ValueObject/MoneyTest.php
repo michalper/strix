@@ -8,6 +8,11 @@ use App\ValueObject\Money;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @internal
+ *
+ * @coversNothing
+ */
 final class MoneyTest extends TestCase
 {
     public function testValidMoneyIsConstructed(): void
@@ -18,7 +23,7 @@ final class MoneyTest extends TestCase
         self::assertSame('PLN', $money->currency);
     }
 
-    #[DataProvider('invalidAmountProvider')]
+    #[DataProvider('provideInvalidAmountIsRejectedCases')]
     public function testInvalidAmountIsRejected(int $minorUnits, string $currency): void
     {
         $this->expectException(\InvalidArgumentException::class);
@@ -29,13 +34,18 @@ final class MoneyTest extends TestCase
     /**
      * @return iterable<string, array{0: int, 1: string}>
      */
-    public static function invalidAmountProvider(): iterable
+    public static function provideInvalidAmountIsRejectedCases(): iterable
     {
         yield 'zero amount' => [0, 'PLN'];
+
         yield 'negative amount' => [-100, 'PLN'];
+
         yield 'lowercase currency' => [100, 'pln'];
+
         yield 'too short currency' => [100, 'PL'];
+
         yield 'too long currency' => [100, 'PLNN'];
+
         yield 'numeric currency' => [100, '123'];
     }
 }

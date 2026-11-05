@@ -7,6 +7,11 @@ namespace App\Tests\Unit\Security;
 use App\Security\WebhookSignatureVerifier;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @internal
+ *
+ * @coversNothing
+ */
 final class WebhookSignatureVerifierTest extends TestCase
 {
     public function testValidSignaturePasses(): void

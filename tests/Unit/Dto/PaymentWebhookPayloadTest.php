@@ -9,11 +9,16 @@ use App\Exception\InvalidWebhookPayloadException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @internal
+ *
+ * @coversNothing
+ */
 final class PaymentWebhookPayloadTest extends TestCase
 {
     public function testValidPayloadIsParsed(): void
     {
-        $payload = PaymentWebhookPayload::fromRawJson(self::validPayloadJson());
+        $payload = PaymentWebhookPayload::fromRawJson($this->validPayloadJson());
 
         self::assertSame('evt_9f8d7c6b5a4321', $payload->eventId);
         self::assertSame('charge.successful', $payload->eventType);
@@ -55,10 +60,10 @@ final class PaymentWebhookPayloadTest extends TestCase
     /**
      * @param callable(array<string, mixed>): array<string, mixed> $mutate
      */
-    #[DataProvider('missingOrInvalidFieldProvider')]
+    #[DataProvider('provideMissingOrInvalidFieldIsRejectedCases')]
     public function testMissingOrInvalidFieldIsRejected(callable $mutate, string $expectedField): void
     {
-        $data = $mutate(self::validPayloadArray());
+        $data = $mutate($this->validPayloadArray());
 
         try {
             PaymentWebhookPayload::fromRawJson(json_encode($data, JSON_THROW_ON_ERROR));
@@ -72,7 +77,7 @@ final class PaymentWebhookPayloadTest extends TestCase
     /**
      * @return iterable<string, array{0: callable(array<string, mixed>): array<string, mixed>, 1: string}>
      */
-    public static function missingOrInvalidFieldProvider(): iterable
+    public static function provideMissingOrInvalidFieldIsRejectedCases(): iterable
     {
         yield 'missing event_id' => [
             static function (array $data): array {
@@ -82,6 +87,7 @@ final class PaymentWebhookPayloadTest extends TestCase
             },
             'event_id',
         ];
+
         yield 'missing data.transaction.id' => [
             static function (array $data): array {
                 unset($data['data']['transaction']['id']);
@@ -90,6 +96,7 @@ final class PaymentWebhookPayloadTest extends TestCase
             },
             'data.transaction.id',
         ];
+
         yield 'missing data.customer.email' => [
             static function (array $data): array {
                 unset($data['data']['customer']['email']);
@@ -98,6 +105,7 @@ final class PaymentWebhookPayloadTest extends TestCase
             },
             'data.customer.email',
         ];
+
         yield 'missing data.metadata.order_id' => [
             static function (array $data): array {
                 unset($data['data']['metadata']['order_id']);
@@ -106,6 +114,7 @@ final class PaymentWebhookPayloadTest extends TestCase
             },
             'data.metadata.order_id',
         ];
+
         yield 'missing data.metadata.store_id' => [
             static function (array $data): array {
                 unset($data['data']['metadata']['store_id']);
@@ -114,6 +123,7 @@ final class PaymentWebhookPayloadTest extends TestCase
             },
             'data.metadata.store_id',
         ];
+
         yield 'amount.value as non-numeric string' => [
             static function (array $data): array {
                 $data['data']['transaction']['amount']['value'] = 'abc';
@@ -122,6 +132,7 @@ final class PaymentWebhookPayloadTest extends TestCase
             },
             'data.transaction.amount.value',
         ];
+
         yield 'amount.value is zero' => [
             static function (array $data): array {
                 $data['data']['transaction']['amount']['value'] = 0;
@@ -130,6 +141,7 @@ final class PaymentWebhookPayloadTest extends TestCase
             },
             'data.transaction.amount.value',
         ];
+
         yield 'amount.value is negative' => [
             static function (array $data): array {
                 $data['data']['transaction']['amount']['value'] = -100;
@@ -138,6 +150,7 @@ final class PaymentWebhookPayloadTest extends TestCase
             },
             'data.transaction.amount.value',
         ];
+
         yield 'amount.currency has unknown format' => [
             static function (array $data): array {
                 $data['data']['transaction']['amount']['currency'] = 'XX';
@@ -146,6 +159,7 @@ final class PaymentWebhookPayloadTest extends TestCase
             },
             'data.transaction.amount.currency',
         ];
+
         yield 'livemode as string instead of bool' => [
             static function (array $data): array {
                 $data['livemode'] = 'true';
@@ -154,6 +168,7 @@ final class PaymentWebhookPayloadTest extends TestCase
             },
             'livemode',
         ];
+
         yield 'timestamp as non-numeric string' => [
             static function (array $data): array {
                 $data['timestamp'] = 'not-a-number';
@@ -162,6 +177,7 @@ final class PaymentWebhookPayloadTest extends TestCase
             },
             'timestamp',
         ];
+
         yield 'data is not an object' => [
             static function (array $data): array {
                 $data['data'] = 'not-an-object';
@@ -175,7 +191,7 @@ final class PaymentWebhookPayloadTest extends TestCase
     /**
      * @return array<string, mixed>
      */
-    private static function validPayloadArray(): array
+    private function validPayloadArray(): array
     {
         return [
             'event' => 'charge.successful',
@@ -215,8 +231,8 @@ final class PaymentWebhookPayloadTest extends TestCase
         ];
     }
 
-    private static function validPayloadJson(): string
+    private function validPayloadJson(): string
     {
-        return json_encode(self::validPayloadArray(), JSON_THROW_ON_ERROR);
+        return json_encode($this->validPayloadArray(), JSON_THROW_ON_ERROR);
     }
 }

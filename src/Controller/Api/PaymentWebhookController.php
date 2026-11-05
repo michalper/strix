@@ -19,15 +19,14 @@ use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[WithMonologChannel('webhook')]
-final class PaymentWebhookController
+final readonly class PaymentWebhookController
 {
     public function __construct(
-        private readonly WebhookSignatureVerifier $signatureVerifier,
-        private readonly WebhookEventRepository $repository,
-        private readonly MessageBusInterface $messageBus,
-        private readonly LoggerInterface $logger,
-    ) {
-    }
+        private WebhookSignatureVerifier $signatureVerifier,
+        private WebhookEventRepository $repository,
+        private MessageBusInterface $messageBus,
+        private LoggerInterface $logger,
+    ) {}
 
     #[Route('/api/v1/webhooks/payment', name: 'webhook_payment', methods: ['POST'])]
     public function __invoke(Request $request): JsonResponse

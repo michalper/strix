@@ -15,7 +15,7 @@ final readonly class Money
         }
 
         if (!preg_match('/^[A-Z]{3}$/', $currency)) {
-            throw new \InvalidArgumentException(sprintf('Currency must be a 3-letter uppercase ISO 4217 code, got "%s".', $currency));
+            throw new \InvalidArgumentException(\sprintf('Currency must be a 3-letter uppercase ISO 4217 code, got "%s".', $currency));
         }
     }
 }

@@ -19,14 +19,13 @@ use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 
 #[WithMonologChannel('webhook')]
 #[AsMessageHandler]
-final class SendPaymentNotificationHandler
+final readonly class SendPaymentNotificationHandler
 {
     public function __construct(
-        private readonly WebhookEventRepository $repository,
-        private readonly NotificationChannelInterface $channel,
-        private readonly LoggerInterface $logger,
-    ) {
-    }
+        private WebhookEventRepository $repository,
+        private NotificationChannelInterface $channel,
+        private LoggerInterface $logger,
+    ) {}
 
     public function __invoke(SendPaymentNotification $message): void
     {
@@ -34,7 +33,7 @@ final class SendPaymentNotificationHandler
 
         if (null === $event) {
             // Nothing sensible to retry towards; the webhook row is the source of truth.
-            throw new UnrecoverableMessageHandlingException(sprintf('Webhook event "%s" not found, skipping.', $message->eventId));
+            throw new UnrecoverableMessageHandlingException(\sprintf('Webhook event "%s" not found, skipping.', $message->eventId));
         }
 
         $payload = new NotificationPayload(
@@ -51,7 +50,7 @@ final class SendPaymentNotificationHandler
             // 4xx: our request was rejected outright — not a transient failure, don't retry.
             $this->repository->incrementRetry($event, $e->getMessage());
 
-            throw new UnrecoverableMessageHandlingException($e->getMessage(), previous: $e);
+            throw new UnrecoverableMessageHandlingException($e->getMessage(), $e->getCode(), previous: $e);
         } catch (ServerExceptionInterface|TransportExceptionInterface $e) {
             // 5xx or network/timeout: transient. Rethrow so Messenger's retry_strategy
             // (exponential backoff) takes over; it routes to the DLQ once exhausted.

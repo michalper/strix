@@ -13,6 +13,11 @@ use Psr\Log\NullLogger;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Event\WorkerMessageFailedEvent;
 
+/**
+ * @internal
+ *
+ * @coversNothing
+ */
 final class MessengerFailureListenerTest extends TestCase
 {
     public function testExhaustedRetriesMarksDeadLetter(): void
@@ -20,7 +25,7 @@ final class MessengerFailureListenerTest extends TestCase
         $event = WebhookEventTestFactory::create();
         $repository = $this->createMock(WebhookEventRepository::class);
         $repository->method('findOneByEventId')->willReturn($event);
-        $repository->expects(self::once())->method('markDeadLetter')->with($event, self::callback(static fn ($value): bool => is_string($value)));
+        $repository->expects(self::once())->method('markDeadLetter')->with($event, self::callback(static fn ($value): bool => \is_string($value)));
 
         $workerEvent = new WorkerMessageFailedEvent(
             new Envelope(new SendPaymentNotification($event->getEventId())),

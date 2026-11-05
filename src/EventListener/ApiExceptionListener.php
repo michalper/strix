@@ -20,12 +20,11 @@ use Symfony\Component\HttpKernel\KernelEvents;
  * that the full exception is logged before responding.
  */
 #[AsEventListener(event: KernelEvents::EXCEPTION)]
-final class ApiExceptionListener
+final readonly class ApiExceptionListener
 {
     public function __construct(
-        private readonly LoggerInterface $logger,
-    ) {
-    }
+        private LoggerInterface $logger,
+    ) {}
 
     public function __invoke(ExceptionEvent $event): void
     {

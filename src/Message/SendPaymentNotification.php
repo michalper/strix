@@ -8,6 +8,5 @@ final readonly class SendPaymentNotification
 {
     public function __construct(
         public string $eventId,
-    ) {
-    }
+    ) {}
 }

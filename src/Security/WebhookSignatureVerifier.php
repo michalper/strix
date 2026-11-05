@@ -9,12 +9,11 @@ namespace App\Security;
  * Computed over the raw request body bytes, before any JSON decoding, so the
  * signature covers exactly what the provider signed.
  */
-final class WebhookSignatureVerifier
+final readonly class WebhookSignatureVerifier
 {
     public function __construct(
-        private readonly string $secret,
-    ) {
-    }
+        private string $secret,
+    ) {}
 
     public function verify(string $rawBody, ?string $signatureHeader): bool
     {

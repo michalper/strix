@@ -18,6 +18,11 @@ use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
 use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 
+/**
+ * @internal
+ *
+ * @coversNothing
+ */
 final class SendPaymentNotificationHandlerTest extends TestCase
 {
     public function testSuccessfulDeliveryMarksNotifiedAndNeverRetries(): void
@@ -38,7 +43,7 @@ final class SendPaymentNotificationHandlerTest extends TestCase
         $event = WebhookEventTestFactory::create();
         $repository = $this->createMock(WebhookEventRepository::class);
         $repository->method('findOneByEventId')->willReturn($event);
-        $repository->expects(self::once())->method('incrementRetry')->with($event, self::callback(static fn ($value): bool => is_string($value)));
+        $repository->expects(self::once())->method('incrementRetry')->with($event, self::callback(static fn ($value): bool => \is_string($value)));
         $repository->expects(self::never())->method('markNotified');
 
         $handler = $this->makeHandler($repository, new MockResponse('{}', ['http_code' => 400]));
@@ -51,13 +56,13 @@ final class SendPaymentNotificationHandlerTest extends TestCase
     /**
      * @param class-string<\Throwable> $expectedExceptionInterface
      */
-    #[DataProvider('transientFailureProvider')]
+    #[DataProvider('provideTransientFailureIsRethrownForMessengerToRetryCases')]
     public function testTransientFailureIsRethrownForMessengerToRetry(MockResponse $response, string $expectedExceptionInterface): void
     {
         $event = WebhookEventTestFactory::create();
         $repository = $this->createMock(WebhookEventRepository::class);
         $repository->method('findOneByEventId')->willReturn($event);
-        $repository->expects(self::once())->method('incrementRetry')->with($event, self::callback(static fn ($value): bool => is_string($value)));
+        $repository->expects(self::once())->method('incrementRetry')->with($event, self::callback(static fn ($value): bool => \is_string($value)));
         $repository->expects(self::never())->method('markNotified');
 
         $handler = $this->makeHandler($repository, $response);
@@ -70,12 +75,13 @@ final class SendPaymentNotificationHandlerTest extends TestCase
     /**
      * @return iterable<string, array{0: MockResponse, 1: class-string<\Throwable>}>
      */
-    public static function transientFailureProvider(): iterable
+    public static function provideTransientFailureIsRethrownForMessengerToRetryCases(): iterable
     {
         yield '5xx server error' => [
             new MockResponse('{}', ['http_code' => 500]),
             ServerExceptionInterface::class,
         ];
+
         yield 'transport-level timeout' => [
             new MockResponse('', ['error' => 'Connection timed out']),
             TransportExceptionInterface::class,
