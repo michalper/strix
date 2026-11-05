@@ -67,15 +67,21 @@ final readonly class PaymentWebhookPayload
         $amountValue = self::requireInt($amountData, 'value', $errors, 'data.transaction.amount.value');
         $amountCurrency = self::requireString($amountData, 'currency', $errors, 'data.transaction.amount.currency');
 
-        // Money is the single owner of "positive value" / "3-letter currency code" -
-        // try constructing it rather than re-deriving its own invariants here.
+        // Money::isValidAmount()/isValidCurrencyCode() are the single owner of these
+        // rules (also enforced in its constructor) - calling them here only attributes
+        // which specific field is wrong, it doesn't re-derive the rules themselves.
         $amount = null;
         if (null !== $amountValue && null !== $amountCurrency) {
-            try {
-                $amount = new Money($amountValue, $amountCurrency);
-            } catch (\InvalidArgumentException) {
+            $validAmount = Money::isValidAmount($amountValue);
+            $validCurrency = Money::isValidCurrencyCode($amountCurrency);
+            if (!$validAmount) {
                 $errors[] = 'data.transaction.amount.value';
+            }
+            if (!$validCurrency) {
                 $errors[] = 'data.transaction.amount.currency';
+            }
+            if ($validAmount && $validCurrency) {
+                $amount = new Money($amountValue, $amountCurrency);
             }
         }
 

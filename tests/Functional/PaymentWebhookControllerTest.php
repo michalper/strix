@@ -94,10 +94,31 @@ final class PaymentWebhookControllerTest extends WebTestCase
         $this->client->request('POST', self::ENDPOINT, server: $headers, content: $body);
         self::assertResponseStatusCodeSame(Response::HTTP_OK);
         self::assertSame('already_processed', $this->decodeResponse($this->client->getResponse())['status']);
-        // The duplicate must not dispatch a second notification.
-        self::assertCount(0, $this->asyncTransport()->getSent());
+        // The row is still PENDING (nothing in this test actually consumes the first
+        // dispatched message), so the duplicate is expected to re-dispatch as a
+        // recovery mechanism - see testDuplicateOfAnAlreadyNotifiedEventDoesNotRedispatch
+        // for the case where it must NOT.
+        self::assertCount(1, $this->asyncTransport()->getSent());
 
         self::assertSame(1, $this->countRowsForEventId('evt_func_dup'));
+    }
+
+    public function testDuplicateOfAnAlreadyNotifiedEventDoesNotRedispatch(): void
+    {
+        $body = $this->validPayload('evt_func_notified_dup', 'ORD-FUNC-NOTIFIED-DUP');
+        $headers = $this->signedHeaders($body);
+
+        $this->client->request('POST', self::ENDPOINT, server: $headers, content: $body);
+        self::assertResponseStatusCodeSame(Response::HTTP_ACCEPTED);
+
+        $repository = self::getContainer()->get(WebhookEventRepository::class);
+        $event = $repository->findOneByEventId('evt_func_notified_dup');
+        self::assertNotNull($event);
+        $repository->markNotified($event);
+
+        $this->client->request('POST', self::ENDPOINT, server: $headers, content: $body);
+        self::assertResponseStatusCodeSame(Response::HTTP_OK);
+        self::assertCount(0, $this->asyncTransport()->getSent());
     }
 
     /**

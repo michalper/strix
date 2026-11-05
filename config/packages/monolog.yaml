@@ -38,7 +38,7 @@ when@prod:
                 action_level: error
                 handler: nested
                 excluded_http_codes: [404, 405]
-                channels: ["!deprecation"]
+                channels: ["!deprecation", "!webhook"]
                 buffer_size: 50 # How many messages should be saved? Prevent memory leaks
             nested:
                 type: stream
@@ -53,4 +53,14 @@ when@prod:
                 type: stream
                 channels: [deprecation]
                 path: php://stderr
+                formatter: monolog.formatter.json
+            # Poison-pill/invalid-signature rejections and retry/DLQ events are logged at
+            # "warning", but fingers_crossed above only flushes its buffer on an "error"+
+            # record - routed through it, every rejected-webhook warning would be
+            # silently discarded in prod. This channel writes directly, unbuffered.
+            webhook:
+                type: stream
+                channels: [webhook]
+                path: php://stderr
+                level: warning
                 formatter: monolog.formatter.json

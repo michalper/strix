@@ -6,6 +6,7 @@ namespace App\Controller\Api;
 
 use App\Dto\PaymentWebhookPayload;
 use App\Entity\WebhookEvent;
+use App\Enum\WebhookProcessingStatus;
 use App\Exception\InvalidWebhookPayloadException;
 use App\Message\SendPaymentNotification;
 use App\Repository\WebhookEventRepository;
@@ -59,7 +60,18 @@ final readonly class PaymentWebhookController
         $isNew = $this->repository->insertIfNotExists($event);
 
         if (!$isNew) {
-            $this->logger->info('Duplicate webhook ignored.', ['event_id' => $event->getEventId()]);
+            // If the original request's dispatch() below never reached RabbitMQ (e.g. a
+            // transient outage right after the insert committed), the row is stuck
+            // PENDING with no notification ever sent and no other recovery path. A
+            // provider's retry of the same event_id is the only signal we get for that -
+            // use it to redispatch instead of just re-confirming "already processed".
+            $existing = $this->repository->findOneByEventId($event->getEventId());
+            if (null !== $existing && WebhookProcessingStatus::Pending === $existing->getProcessingStatus()) {
+                $this->messageBus->dispatch(new SendPaymentNotification($existing->getEventId()));
+                $this->logger->info('Duplicate webhook still pending; re-dispatched notification.', ['event_id' => $existing->getEventId()]);
+            } else {
+                $this->logger->info('Duplicate webhook ignored.', ['event_id' => $event->getEventId()]);
+            }
 
             return new JsonResponse(['status' => 'already_processed', 'event_id' => $event->getEventId()], Response::HTTP_OK);
         }

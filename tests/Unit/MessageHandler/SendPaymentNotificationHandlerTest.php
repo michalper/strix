@@ -15,6 +15,7 @@ use Psr\Log\NullLogger;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 
@@ -85,6 +86,16 @@ final class SendPaymentNotificationHandlerTest extends TestCase
         yield 'transport-level timeout' => [
             new MockResponse('', ['error' => 'Connection timed out']),
             TransportExceptionInterface::class,
+        ];
+
+        yield '429 too many requests' => [
+            new MockResponse('{}', ['http_code' => 429]),
+            ClientExceptionInterface::class,
+        ];
+
+        yield '408 request timeout' => [
+            new MockResponse('{}', ['http_code' => 408]),
+            ClientExceptionInterface::class,
         ];
     }
 

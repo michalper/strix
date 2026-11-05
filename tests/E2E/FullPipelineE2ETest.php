@@ -49,6 +49,32 @@ final class FullPipelineE2ETest extends TestCase
         self::assertCount(1, $requests);
     }
 
+    /**
+     * SPEC.md's "External API Failures & Backoff" scenario explicitly asks for
+     * recovery via retry, not just eventual DLQ - the mock's RETRY_ONCE marker fails
+     * the first delivery attempt for a given event_id then succeeds, so this is the
+     * only test proving the real Messenger retry_strategy backs off and then
+     * actually recovers, against the live stack (unit tests only prove the handler's
+     * branching logic, not real retry timing/wiring).
+     */
+    public function testTransientFailureTriggersRetryThenSucceeds(): void
+    {
+        $eventId = 'evt_e2e_'.bin2hex(random_bytes(4));
+        $orderId = 'ORD-RETRY_ONCE-E2E-'.bin2hex(random_bytes(4));
+
+        $this->postWebhook($eventId, $orderId);
+
+        self::assertSame('NOTIFIED', $this->pollStatus($eventId));
+
+        $statement = $this->pdo->prepare('SELECT retry_count FROM webhook_events WHERE event_id = ?');
+        $statement->execute([$eventId]);
+        self::assertGreaterThanOrEqual(1, (int) $statement->fetchColumn());
+
+        // Exactly two calls reached the mock: the failed first attempt, then the
+        // successful retry - not just "it ended up NOTIFIED somehow".
+        self::assertCount(2, $this->mockRequestsFor($orderId));
+    }
+
     public function testPermanentFailureEndsInDeadLetterQueue(): void
     {
         $eventId = 'evt_e2e_'.bin2hex(random_bytes(4));
@@ -61,6 +87,22 @@ final class FullPipelineE2ETest extends TestCase
         $statement = $this->pdo->query("SELECT COUNT(*) FROM messenger_messages WHERE queue_name = 'failed'");
         self::assertNotFalse($statement);
         self::assertGreaterThanOrEqual(1, (int) $statement->fetchColumn());
+    }
+
+    /**
+     * The mock's TIMEOUT marker sleeps 10s before responding, longer than the 5s
+     * framework.http_client timeout (config/packages/framework.yaml) - confirms a real
+     * client-side TransportExceptionInterface drives this to the DLQ too, not just a
+     * slow-but-complete 5xx response (that's PermanentFailure, above).
+     */
+    public function testClientTimeoutEndsInDeadLetterQueue(): void
+    {
+        $eventId = 'evt_e2e_'.bin2hex(random_bytes(4));
+        $orderId = 'ORD-TIMEOUT-E2E-'.bin2hex(random_bytes(4));
+
+        $this->postWebhook($eventId, $orderId);
+
+        self::assertSame('DEAD_LETTER', $this->pollStatus($eventId, timeoutSeconds: 40));
     }
 
     /**
@@ -109,10 +151,10 @@ final class FullPipelineE2ETest extends TestCase
         self::assertSame(202, $response->getStatusCode());
     }
 
-    private function pollStatus(string $eventId): ?string
+    private function pollStatus(string $eventId, ?int $timeoutSeconds = null): ?string
     {
         $statement = $this->pdo->prepare('SELECT processing_status FROM webhook_events WHERE event_id = ?');
-        $deadline = microtime(true) + self::POLL_TIMEOUT_SECONDS;
+        $deadline = microtime(true) + ($timeoutSeconds ?? self::POLL_TIMEOUT_SECONDS);
 
         do {
             $statement->execute([$eventId]);

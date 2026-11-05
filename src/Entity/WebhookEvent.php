@@ -12,16 +12,17 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: WebhookEventRepository::class)]
 #[ORM\Table(name: 'webhook_events')]
+#[ORM\UniqueConstraint(name: 'uniq_webhook_events_event_id', columns: ['event_id'])]
 #[ORM\Index(name: 'idx_webhook_events_order_id', columns: ['order_id'])]
 #[ORM\Index(name: 'idx_webhook_events_processing_status', columns: ['processing_status'])]
-class WebhookEvent
+final class WebhookEvent
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: Types::BIGINT)]
     private ?int $id = null;
 
-    #[ORM\Column(length: 64, unique: true)]
+    #[ORM\Column(length: 64)]
     private string $eventId;
 
     #[ORM\Column(length: 64)]

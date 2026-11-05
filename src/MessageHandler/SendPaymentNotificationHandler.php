@@ -47,10 +47,24 @@ final readonly class SendPaymentNotificationHandler
         try {
             $this->channel->send($payload);
         } catch (ClientExceptionInterface $e) {
-            // 4xx: our request was rejected outright — not a transient failure, don't retry.
             $this->repository->incrementRetry($event, $e->getMessage());
+            $statusCode = $e->getResponse()->getStatusCode();
 
-            throw new UnrecoverableMessageHandlingException($e->getMessage(), $e->getCode(), previous: $e);
+            // 408/429 are rate-limit/timeout signals from the provider, not a
+            // permanently malformed request - they need the same backoff-and-retry
+            // treatment as a 5xx, not an immediate drop to the DLQ.
+            if (\in_array($statusCode, [408, 429], true)) {
+                $this->logger->warning('Notification delivery rate-limited or timed out, will retry.', [
+                    'event_id' => $event->getEventId(),
+                    'status_code' => $statusCode,
+                    'retry_count' => $event->getRetryCount(),
+                ]);
+
+                throw $e;
+            }
+
+            // Any other 4xx: our request was rejected outright — not transient, don't retry.
+            throw new UnrecoverableMessageHandlingException($e->getMessage(), $statusCode, previous: $e);
         } catch (ServerExceptionInterface|TransportExceptionInterface $e) {
             // 5xx or network/timeout: transient. Rethrow so Messenger's retry_strategy
             // (exponential backoff) takes over; it routes to the DLQ once exhausted.

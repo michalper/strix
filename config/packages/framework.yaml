@@ -5,6 +5,14 @@ framework:
     # Note that the session will be started ONLY if you read or write from it.
     session: true
 
+    # Without an explicit ceiling, a hanging notification endpoint could block the
+    # single messenger:consume worker indefinitely instead of surfacing as a retryable
+    # TransportExceptionInterface (the mock's TIMEOUT marker sleeps 10s specifically to
+    # exceed this).
+    http_client:
+        default_options:
+            timeout: 5
+
     #esi: true
     #fragments: true
 
