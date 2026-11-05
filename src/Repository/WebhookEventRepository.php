@@ -10,9 +10,12 @@ use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
+ * Not final: unit tests mock this repository to isolate SendPaymentNotificationHandler
+ * and MessengerFailureListener from a real database.
+ *
  * @extends ServiceEntityRepository<WebhookEvent>
  */
-final class WebhookEventRepository extends ServiceEntityRepository
+class WebhookEventRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {

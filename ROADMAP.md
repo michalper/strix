@@ -15,7 +15,7 @@ Implementation checklist for the Payment Webhook Ingestion & Notification Pipeli
 - [x] 11. `mock/notification-service/` (plain-PHP mock + Dockerfile)
 - [x] 12. `docker/php/Dockerfile`, `docker/nginx/default.conf`, `docker-compose.yml`, `docker-compose.override.e2e.yml`
 - [x] 13. `phpstan.neon`, `tests/object-manager.php`, `.php-cs-fixer.dist.php` — green at level 8
-- [ ] 14. Unit tests (`tests/Unit/`) — green
+- [x] 14. Unit tests (`tests/Unit/`) — green
 - [ ] 15. Functional tests (`tests/Functional/`), test DB + migration — green
 - [ ] 16. Functional test: out-of-order delivery guard — `charge.successful` processed correctly per-`event_id` even when no prior payment-intent record exists yet
 - [ ] 17. `docker compose up --build` + manual smoke test (idempotency curl ×2, `FAIL`/`RETRY_ONCE`/`TIMEOUT` markers, RabbitMQ UI, direct SQL checks)

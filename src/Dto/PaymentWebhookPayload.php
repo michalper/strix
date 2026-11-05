@@ -43,7 +43,7 @@ final readonly class PaymentWebhookPayload
             throw InvalidWebhookPayloadException::malformedJson('Request body is not valid JSON: '.$e->getMessage());
         }
 
-        if (!is_array($decoded)) {
+        if (!is_array($decoded) || ([] !== $decoded && array_is_list($decoded))) {
             throw InvalidWebhookPayloadException::malformedJson('Request body must be a JSON object.');
         }
 
