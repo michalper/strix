@@ -20,7 +20,7 @@ Implementation checklist for the Payment Webhook Ingestion & Notification Pipeli
 - [x] 16. Unit tests (`tests/Unit/`) — green
 - [x] 17. Functional tests (`tests/Functional/`), test DB + migration — green
 - [x] 18. Functional test: out-of-order delivery guard — `charge.successful` processed correctly per-`event_id` even when no prior payment-intent record exists yet
-- [ ] 19. `docker compose up --build` + manual smoke test (idempotency curl ×2, `FAIL`/`RETRY_ONCE`/`TIMEOUT` markers, RabbitMQ UI, direct SQL checks)
+- [x] 19. `docker compose up --build` + manual smoke test (idempotency curl ×2, `FAIL`/`RETRY_ONCE`/`TIMEOUT` markers, RabbitMQ UI, direct SQL checks)
 - [ ] 20. E2E tests (`tests/E2E/`) against the live stack
 - [ ] 21. `.github/workflows/ci.yml` (5 jobs: static-analysis [PHPStan, php-cs-fixer --dry-run, Rector --dry-run], unit-tests, functional-tests, e2e-tests in parallel + `build` gate; `mutation-testing` on `workflow_dispatch`)
 - [ ] 22. `infection.json5` (stretch goal, non-blocking)

@@ -10,11 +10,11 @@
 
 Szanowny Panie,
 
-Przejmuję prowadzenie projektu odbierania zgłoszeń o płatnościach. Zanim zacznę pracę, chciałbym przedstawić Panu kilka warunków, bez których nie mogę wziąć za ten system odpowiedzialności. Chciałbym też zaproponować, co zrobimy od razu, a co odłożymy na później.
+Przejmuję prowadzenie projektu odbierania zgłoszeń o płatnościach. Zanim zacznę pracę, chciałbym przedstawić Panu kilka warunków, bez których nie mogę wziąć za ten system odpowiedzialności. Chciałbym też zaproponować, która część prac wykonamy w pierwszej kolejności, a która na dalszych etapach.
 
 **Warunki niezbędne do rozpoczęcia pracy:**
 
-Ten system obsługuje pieniądze klientów, więc poniższe punkty traktuję jako konieczność, a nie temat do dyskusji:
+Ten system rejestruje płatności klientów, dlatego poniższe punkty traktuję jako warunek techniczny realizacji projektu:
 
 - **Żadne zgłoszenie o płatności nie może się zgubić.** Jeśli nasz system powiadomień będzie przez chwilę niedostępny (np. przeciążony lub w trakcie awarii), zgłoszenie nie przepadnie — system będzie próbował je dostarczyć ponownie, z coraz dłuższą przerwą między próbami, a jeśli to się mimo wszystko nie uda, zgłoszenie trafi do bezpiecznego miejsca, skąd można je później ręcznie obsłużyć.
 - **Jedna płatność nie może zostać zarejestrowana dwa razy.** Jeśli dostawca płatności wyśle to samo zgłoszenie dwukrotnie (co się zdarza, np. przy chwilowych problemach z łącznością), system musi to rozpoznać i zapisać tylko jeden raz.
