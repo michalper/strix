@@ -10,7 +10,7 @@
 
 Szanowny Panie,
 
-Przejmuję projekt, który odbiera zgłoszenia o płatnościach. Zanim zacznę pracę, chciałbym przedstawić Panu kilka warunków, bez których nie mogę wziąć za ten system odpowiedzialności. Chciałbym też zaproponować, która część prac wykonamy w pierwszej kolejności, a która na dalszych etapach.
+Przejmuję projekt, który odbiera zgłoszenia o płatnościach i przekazuje powiadomienia do zespołu sprzedaży. Zanim zacznę pracę, chciałbym przedstawić Panu kilka warunków, bez których nie mogę wziąć za ten system odpowiedzialności. Chciałbym też zaproponować, która część prac wykonamy w pierwszej kolejności, a która na dalszych etapach.
 
 **Warunki niezbędne do rozpoczęcia pracy:**
 
@@ -46,7 +46,7 @@ Z poważaniem,
 
 Hello,
 
-I'm taking over the project that receives payment notifications and forwards them to the sales team. Before I start, I'd like to set out a few conditions I need in place to responsibly take ownership of this system, and propose what we build now versus what we leave for later.
+I'm taking over the project that receives payment notifications and forwards them to the sales team. Before I start, I'd like to set out a few conditions I need in place to responsibly take ownership of this system. I'd also like to propose which parts of the work we tackle first, and which we leave for later phases.
 
 **Conditions I need in place before I start:**
 

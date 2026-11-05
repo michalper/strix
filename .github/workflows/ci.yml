@@ -35,6 +35,12 @@ jobs:
           cache-from: type=gha,scope=php-dev
           cache-to: type=gha,scope=php-dev,mode=max
 
+      # The dev image has no COPY/composer-install baked in (it's meant to run against
+      # whatever's bind-mounted) and vendor/ is gitignored, so a fresh checkout has no
+      # vendor/bin/* at all until this runs.
+      - name: Install composer dependencies
+        run: docker run --rm -v "$PWD":/app -w /app strix-php-dev:dev composer install --no-interaction
+
       # All three tools below are dry-run/non-mutating in CI: fixes are applied by hand
       # locally and reviewed, never auto-committed from a pipeline.
       - name: php-cs-fixer (dry-run)
@@ -69,6 +75,9 @@ jobs:
           load: true
           cache-from: type=gha,scope=php-dev
           cache-to: type=gha,scope=php-dev,mode=max
+
+      - name: Install composer dependencies
+        run: docker run --rm -v "$PWD":/app -w /app strix-php-dev:dev composer install --no-interaction
 
       # Pure unit layer (tests/Unit): no DB, no broker, no network needed.
       - name: Run unit test suite
@@ -120,6 +129,9 @@ jobs:
           cache-from: type=gha,scope=php-dev
           cache-to: type=gha,scope=php-dev,mode=max
 
+      - name: Install composer dependencies
+        run: docker run --rm -v "$PWD":/app -w /app strix-php-dev:dev composer install --no-interaction
+
       # The GH Actions postgres service only auto-creates the "strix" database (via
       # POSTGRES_DB); "strix_test" (what Doctrine's dbname_suffix resolves to) doesn't
       # exist yet on a fresh service container, so migrations would fail without this.
@@ -156,6 +168,12 @@ jobs:
       # the dev tooling needed to actually run the test suite against the live stack.
       - name: Start the stack (docker-compose + e2e override)
         run: docker compose -f docker-compose.yml -f docker-compose.override.e2e.yml up -d --build
+
+      # e2e-runner's image has no composer-install baked in either (same dev target as
+      # the other jobs) - run it inside the running container, writing vendor/ onto the
+      # bind-mounted checkout before the test suite needs it.
+      - name: Install composer dependencies in e2e-runner
+        run: docker compose -f docker-compose.yml -f docker-compose.override.e2e.yml exec -T e2e-runner composer install --no-interaction
 
       - name: Wait for the app to accept connections
         run: |
@@ -232,6 +250,9 @@ jobs:
           load: true
           cache-from: type=gha,scope=php-dev
           cache-to: type=gha,scope=php-dev,mode=max
+
+      - name: Install composer dependencies
+        run: docker run --rm -v "$PWD":/app -w /app strix-php-dev:dev composer install --no-interaction
 
       - name: Run Infection
         run: docker run --rm -v "$PWD":/app -w /app strix-php-dev:dev vendor/bin/infection --threads=4 --min-msi=60
