@@ -12,7 +12,7 @@ Implementation checklist for the Payment Webhook Ingestion & Notification Pipeli
 - [x] 8. `Controller/Api/PaymentWebhookController` + `EventListener/ApiExceptionListener`
 - [x] 9. `Message/SendPaymentNotification`, `Notification/{NotificationChannelInterface,NotificationPayload,MockHttpNotificationChannel}`, `MessageHandler/SendPaymentNotificationHandler`, `EventListener/MessengerFailureListener`
 - [x] 10. `config/packages/messenger.yaml`, `config/packages/monolog.yaml`
-- [ ] 11. `mock/notification-service/` (plain-PHP mock + Dockerfile)
+- [x] 11. `mock/notification-service/` (plain-PHP mock + Dockerfile)
 - [ ] 12. `docker/php/Dockerfile`, `docker/nginx/default.conf`, `docker-compose.yml`, `docker-compose.override.e2e.yml`
 - [ ] 13. `phpstan.neon`, `tests/object-manager.php`, `.php-cs-fixer.dist.php` — green at level 8
 - [ ] 14. Unit tests (`tests/Unit/`) — green
