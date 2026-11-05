@@ -6,8 +6,8 @@ namespace App\EventListener;
 
 use App\Message\SendPaymentNotification;
 use App\Repository\WebhookEventRepository;
+use Monolog\Attribute\WithMonologChannel;
 use Psr\Log\LoggerInterface;
-use Symfony\Bridge\Monolog\Attribute\WithMonologChannel;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\Messenger\Event\WorkerMessageFailedEvent;
 
