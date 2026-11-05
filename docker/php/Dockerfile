@@ -1,8 +1,12 @@
 FROM php:8.5-fpm-alpine AS base
 
-ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/install-php-extensions
-
-RUN chmod +x /usr/local/bin/install-php-extensions \
+# A plain RUN+wget instead of `ADD <url>`: BuildKit's remote-ADD caching does its own
+# HTTP probe against the URL to compute a cache key, which intermittently 504'd against
+# GitHub's "latest release" redirect in CI - a normal download inside RUN doesn't hit
+# that code path at all.
+RUN apk add --no-cache ca-certificates \
+    && wget -q -O /usr/local/bin/install-php-extensions https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions \
+    && chmod +x /usr/local/bin/install-php-extensions \
     && install-php-extensions amqp pdo_pgsql opcache \
     && apk add --no-cache git unzip
 
