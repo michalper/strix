@@ -1,0 +1,237 @@
+name: CI
+
+# push/pull_request drive the four real jobs + the gate; workflow_dispatch is also
+# needed here so the optional mutation-testing job (gated below) can be run by hand.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+# Every job below builds the same `dev` target of docker/php/Dockerfile (PHP 8.5 +
+# ext-amqp/pdo_pgsql/pcov + all require-dev tooling) and runs commands against it via
+# `docker run -v "$PWD":/app`, bind-mounting the checked-out repo instead of baking it
+# into the image. This is the same image used for local dev/CI tooling throughout the
+# project (see AGENTS.md) - it keeps CI on the exact same containerized PHP 8.5
+# environment as everywhere else, rather than a bare GH-runner PHP install. The `gha`
+# Buildx cache is shared (same scope) across jobs/runs so the image layer cache is warm
+# after the first build instead of rebuilding ext-amqp etc. from scratch every time.
+jobs:
+  static-analysis:
+    name: Static analysis (PHPStan, php-cs-fixer, Rector)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build dev image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/php/Dockerfile
+          target: dev
+          tags: strix-php-dev:dev
+          load: true
+          cache-from: type=gha,scope=php-dev
+          cache-to: type=gha,scope=php-dev,mode=max
+
+      # All three tools below are dry-run/non-mutating in CI: fixes are applied by hand
+      # locally and reviewed, never auto-committed from a pipeline.
+      - name: php-cs-fixer (dry-run)
+        run: docker run --rm -v "$PWD":/app -w /app strix-php-dev:dev vendor/bin/php-cs-fixer fix --dry-run --diff
+
+      - name: Rector (dry-run)
+        run: docker run --rm -v "$PWD":/app -w /app strix-php-dev:dev vendor/bin/rector process --dry-run
+
+      # phpstan-symfony reads the compiled dev container dump (phpstan.neon ->
+      # symfony.containerXmlPath), so it has to exist before phpstan runs.
+      - name: Warm the dev container (needed by phpstan-symfony)
+        run: docker run --rm -v "$PWD":/app -w /app strix-php-dev:dev php bin/console cache:warm --env=dev
+
+      - name: PHPStan
+        run: docker run --rm -v "$PWD":/app -w /app strix-php-dev:dev vendor/bin/phpstan analyse --no-progress
+
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build dev image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/php/Dockerfile
+          target: dev
+          tags: strix-php-dev:dev
+          load: true
+          cache-from: type=gha,scope=php-dev
+          cache-to: type=gha,scope=php-dev,mode=max
+
+      # Pure unit layer (tests/Unit): no DB, no broker, no network needed.
+      - name: Run unit test suite
+        run: docker run --rm -v "$PWD":/app -w /app strix-php-dev:dev vendor/bin/phpunit --testsuite=unit
+
+  functional-tests:
+    name: Functional tests
+    runs-on: ubuntu-latest
+    # This job's own steps run directly on the runner (not inside a container), so this
+    # Postgres service is reachable from them via localhost - but the test commands
+    # themselves run one level deeper, inside a `docker run` container (the dev image),
+    # so we also need `--network host` on those invocations for 127.0.0.1 to resolve to
+    # the runner's network namespace where the service's port is published.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: strix
+          POSTGRES_USER: strix
+          POSTGRES_PASSWORD: strix
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U strix -d strix"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # App code/tests default DATABASE_URL to hostname "postgres" (the docker-compose
+      # service name), which doesn't exist on the bare runner - point at the published
+      # service port on 127.0.0.1 instead. dbname is "strix", not "strix_test": Doctrine
+      # appends "_test" itself via doctrine.yaml's `dbname_suffix: _test` under
+      # when@test, so this becomes "strix_test" automatically.
+      DATABASE_URL: "postgresql://strix:strix@127.0.0.1:5432/strix?serverVersion=16&charset=utf8"
+      APP_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build dev image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/php/Dockerfile
+          target: dev
+          tags: strix-php-dev:dev
+          load: true
+          cache-from: type=gha,scope=php-dev
+          cache-to: type=gha,scope=php-dev,mode=max
+
+      # The GH Actions postgres service only auto-creates the "strix" database (via
+      # POSTGRES_DB); "strix_test" (what Doctrine's dbname_suffix resolves to) doesn't
+      # exist yet on a fresh service container, so migrations would fail without this.
+      - name: Create the strix_test database
+        run: >-
+          docker run --rm --network host strix-php-dev:dev
+          php -r "(new PDO('pgsql:host=127.0.0.1;port=5432;dbname=strix', 'strix', 'strix'))->exec('CREATE DATABASE strix_test');"
+
+      - name: Run database migrations
+        run: >-
+          docker run --rm --network host -v "$PWD":/app -w /app
+          -e DATABASE_URL -e APP_ENV
+          strix-php-dev:dev php bin/console doctrine:migrations:migrate --no-interaction --env=test
+
+      # tests/Functional (WebTestCase/KernelTestCase) against the real Postgres above.
+      # MESSENGER_TRANSPORT_DSN stays at .env.test's in-memory:// default, so no
+      # RabbitMQ is needed for this job.
+      - name: Run functional test suite
+        run: >-
+          docker run --rm --network host -v "$PWD":/app -w /app
+          -e DATABASE_URL -e APP_ENV
+          strix-php-dev:dev vendor/bin/phpunit --testsuite=functional
+
+  e2e-tests:
+    name: E2E tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Brings up the full stack (postgres, rabbitmq, migrations, app, worker, nginx,
+      # notification-mock) plus the e2e override's faster worker retries and the
+      # e2e-runner service. app/worker are built --no-dev and have no PHPUnit; e2e-runner
+      # is the dev target with the repo bind-mounted, so it's the only container with
+      # the dev tooling needed to actually run the test suite against the live stack.
+      - name: Start the stack (docker-compose + e2e override)
+        run: docker compose -f docker-compose.yml -f docker-compose.override.e2e.yml up -d --build
+
+      - name: Wait for the app to accept connections
+        run: |
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/v1/webhooks/payment || echo "000")
+            if [ "$code" != "000" ] && [ "$code" -lt 500 ]; then
+              echo "App responded with HTTP $code after $((i * 2))s"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "App did not become ready within 60s"
+          docker compose -f docker-compose.yml -f docker-compose.override.e2e.yml logs
+          exit 1
+
+      # tests/E2E drives the real stack end-to-end (webhook POST -> worker consumes from
+      # RabbitMQ -> mock external API receives the call), so it has to run against the
+      # live containers via `exec`, not the Symfony test kernel.
+      - name: Run E2E test suite
+        run: docker compose -f docker-compose.yml -f docker-compose.override.e2e.yml exec -T e2e-runner vendor/bin/phpunit --testsuite=e2e
+
+      - name: Tear down the stack
+        if: always()
+        run: docker compose -f docker-compose.yml -f docker-compose.override.e2e.yml down -v
+
+  # Single required status check for branch protection: does no real work itself, just
+  # fails if any of the four parallel jobs above failed or was cancelled. Having no
+  # `needs:` between static-analysis/unit-tests/functional-tests/e2e-tests (only this
+  # gate depends on all of them) keeps total wall-clock tracking the slowest job (e2e)
+  # instead of the sum of all four.
+  build:
+    name: CI Gate
+    runs-on: ubuntu-latest
+    needs: [static-analysis, unit-tests, functional-tests, e2e-tests]
+    if: always()
+    steps:
+      - name: Check required job results
+        run: |
+          results=(
+            "${{ needs.static-analysis.result }}"
+            "${{ needs.unit-tests.result }}"
+            "${{ needs.functional-tests.result }}"
+            "${{ needs.e2e-tests.result }}"
+          )
+          echo "Job results: ${results[*]}"
+          for result in "${results[@]}"; do
+            if [ "$result" = "failure" ] || [ "$result" = "cancelled" ]; then
+              echo "At least one required job did not succeed."
+              exit 1
+            fi
+          done
+          echo "All required jobs succeeded."
+
+  # Non-blocking stretch goal (AGENTS.md: "Mutation testing (Infection) is an optional
+  # stretch goal, not a requirement") - manual-only via workflow_dispatch, and
+  # continue-on-error so it can never affect the gate above or the other jobs' timing.
+  mutation-testing:
+    name: Mutation testing (Infection)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build dev image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/php/Dockerfile
+          target: dev
+          tags: strix-php-dev:dev
+          load: true
+          cache-from: type=gha,scope=php-dev
+          cache-to: type=gha,scope=php-dev,mode=max
+
+      - name: Run Infection
+        run: docker run --rm -v "$PWD":/app -w /app strix-php-dev:dev vendor/bin/infection --threads=4 --min-msi=60
