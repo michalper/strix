@@ -25,7 +25,7 @@ Implementation checklist for the Payment Webhook Ingestion & Notification Pipeli
 - [x] 21. `.github/workflows/ci.yml` (5 jobs: static-analysis [PHPStan, php-cs-fixer --dry-run, Rector --dry-run], unit-tests, functional-tests, e2e-tests in parallel + `build` gate; `mutation-testing` on `workflow_dispatch`)
 - [ ] 22. `infection.json5` (stretch goal, non-blocking)
 - [x] 23. Close remaining unit coverage gaps (`WebhookEvent` state transitions, `ApiExceptionListener`, `MockHttpNotificationChannel` request shape, `InvalidWebhookPayloadException`) — target 100% unit line coverage if coverage driver (Xdebug/PCOV) is available in the environment
-- [ ] 24. Code audit pass against the checklist in the plan — actually fix what's found
+- [x] 24. Code audit pass against the checklist in the plan — actually fix what's found
 - [ ] 25. `README.md` (`ARCHITECTURE.md` and `EMAIL_TO_CLIENT.md` drafted already, final pass by the user before submission)
 - [ ] 26. Commit, push `main` to the existing `https://github.com/michalper/strix.git` remote
 
