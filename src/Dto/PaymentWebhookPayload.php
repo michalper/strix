@@ -101,7 +101,7 @@ final readonly class PaymentWebhookPayload
 
         \assert(!\in_array(null, [$eventType, $eventId, $timestamp, $livemode], true));
         \assert(null !== $transactionId && null !== $transactionStatus);
-        \assert(null !== $amountValue && null !== $amountCurrency);
+        \assert(null !== $amount);
         \assert(null !== $customerId && null !== $customerEmail);
         \assert(null !== $orderId && null !== $storeId);
 
@@ -112,7 +112,7 @@ final readonly class PaymentWebhookPayload
             occurredAt: new \DateTimeImmutable('@'.$timestamp),
             transactionId: $transactionId,
             providerReference: $providerReference,
-            amount: new Money($amountValue, $amountCurrency),
+            amount: $amount,
             paymentMethodType: $paymentMethodType,
             paymentMethodIssuer: $paymentMethodIssuer,
             transactionStatus: $transactionStatus,
