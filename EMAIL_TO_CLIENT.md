@@ -33,7 +33,7 @@ Przyjmuję powyższe jako fundament pracy. Jeśli z jakiegoś powodu nie są Pan
 - mechanizm wysyłki powiadomień do jednego kanału, z automatycznym ponawianiem i zabezpieczeniem przed utratą zgłoszeń,
 - całość uruchamianą jedną komendą, z instrukcją obsługi.
 
-Proszę o potwierdzenie, że powyższe warunki są dla Pana zrozumiałe i akceptowalne, oraz o informację, co jest dla Pana ważniejsze z punktów do ustalenia. Zaczynam pracę od razu po potwierdzeniu.
+Proszę o potwierdzenie, że powyższe warunki są dla Pana akceptowalne, oraz o informację, co jest dla Pana ważniejsze z punktów do ustalenia. Zaczynam pracę od razu po potwierdzeniu.
 
 Z poważaniem,
 [Imię i nazwisko]
@@ -69,7 +69,7 @@ I'm treating the above as the foundation of the work. If for some reason you don
 - A mechanism that delivers notifications to one channel, with automatic retries and protection against lost notifications,
 - Everything runnable with a single command, with setup instructions included.
 
-Could you confirm the conditions above are clear and acceptable, and let me know which of the open points matters more to you? I'll get started as soon as I have your confirmation.
+Could you confirm the conditions above are acceptable, and let me know which of the open points matters more to you? I'll get started as soon as I have your confirmation.
 
 Best regards,
 [Your name]
