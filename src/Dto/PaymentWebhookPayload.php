@@ -66,13 +66,17 @@ final readonly class PaymentWebhookPayload
         $amountData = self::requireArray($transaction, 'amount', $errors, 'data.transaction.amount');
         $amountValue = self::requireInt($amountData, 'value', $errors, 'data.transaction.amount.value');
         $amountCurrency = self::requireString($amountData, 'currency', $errors, 'data.transaction.amount.currency');
-        if (null !== $amountValue && $amountValue <= 0) {
-            $errors[] = 'data.transaction.amount.value';
-            $amountValue = null;
-        }
-        if (null !== $amountCurrency && !preg_match('/^[A-Z]{3}$/', $amountCurrency)) {
-            $errors[] = 'data.transaction.amount.currency';
-            $amountCurrency = null;
+
+        // Money is the single owner of "positive value" / "3-letter currency code" -
+        // try constructing it rather than re-deriving its own invariants here.
+        $amount = null;
+        if (null !== $amountValue && null !== $amountCurrency) {
+            try {
+                $amount = new Money($amountValue, $amountCurrency);
+            } catch (\InvalidArgumentException) {
+                $errors[] = 'data.transaction.amount.value';
+                $errors[] = 'data.transaction.amount.currency';
+            }
         }
 
         $paymentMethodData = $transaction['payment_method'] ?? null;
@@ -105,7 +109,7 @@ final readonly class PaymentWebhookPayload
             eventId: $eventId,
             eventType: $eventType,
             livemode: $livemode,
-            occurredAt: (new \DateTimeImmutable())->setTimestamp($timestamp),
+            occurredAt: new \DateTimeImmutable('@'.$timestamp),
             transactionId: $transactionId,
             providerReference: $providerReference,
             amount: new Money($amountValue, $amountCurrency),
