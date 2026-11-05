@@ -1,6 +1,8 @@
 {
+    "name": "strix/payment-webhook-pipeline",
+    "description": "Payment webhook ingestion and asynchronous notification pipeline (recruitment task for Strix).",
     "type": "project",
-    "license": "proprietary",
+    "license": "MIT",
     "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {

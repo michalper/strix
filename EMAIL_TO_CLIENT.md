@@ -25,7 +25,7 @@ Przyjmuję powyższe jako fundament pracy. Jeśli z jakiegoś powodu nie są Pan
 
 **Co proponuję odłożyć na później, do wspólnego ustalenia:**
 
-1. **Powiadomienia na wielu kanałach (np. SMS, Slack, druga skrzynka e-mail).** W pierwszym etapie wdrożymy jeden kanał powiadomień, zaprojektowany tak, aby dodanie kolejnych kanałów w przyszłości nie wymagało ponownej budowy całego systemu. Każdy dodatkowy kanał to jednak osobna integracja i własne testy, dlatego proponuję traktować je jako odrębne zadania, wycenione indywidualnie.
+1. **Powiadomienia na wielu kanałach (np. SMS, Slack, druga skrzynka e-mail).** W pierwszym etapie wdrożymy jeden kanał powiadomień, zaprojektowany tak, aby dodanie kolejnych kanałów w przyszłości nie wymagało ponownej budowy całego systemu. Każdy dodatkowy kanał to osobna integracja i własne testy, dlatego proponuję traktować je jako odrębne zadania, wycenione indywidualnie.
 2. **Raporty generowane przez AI.** Proponuję wyłączyć ten element z obecnej iteracji. Wymaga odrębnej rozmowy o zakresie (jakie dane powinny się w nich znaleźć, w jakiej formie, dla kogo i z jaką częstotliwością), zanim przystąpimy do jego realizacji. Chciałbym oprzeć się na precyzyjnie określonym zakresie, aby uniknąć późniejszych poprawek wynikających z błędnych założeń.
 
 **Co otrzyma Pan po pierwszym etapie:**
